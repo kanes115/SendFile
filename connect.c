@@ -37,7 +37,7 @@ int startServer(int port)
 		perror("Error: accept");
 		exit(1);
 	}
-
+	return sockfd;
 }
 
 int startClient(int port, char* ip)
@@ -61,6 +61,7 @@ int startClient(int port, char* ip)
 		perror("Error: connect");
 		exit(1);
 	}
+	return sockfd;
 }
 
 
