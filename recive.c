@@ -35,7 +35,7 @@ int reciveFile(int sockfd, char* name)
 
 	char* buff = (char*)calloc(sizeof(char), SIZE);
 	if(!buff){
-		printf("Error: Failed to allocate memory");
+		perror("Error: Failed to allocate memory");
 		return 3;
 	}
 	int read;
