@@ -8,7 +8,7 @@
 
 #define SIZE 512
 
-int reciveFile(int sockfd, char* name);
+int reciveFile(int sockfd);
 char* getName(char* name);
 
 int main(int argc, char* argv[])
@@ -19,13 +19,18 @@ int main(int argc, char* argv[])
 	}
 	int sockfd = startServer(atoi(argv[1]));
 	sleep(2);
-	reciveFile(sockfd, "CISKOPAKIET");
+	reciveFile(sockfd);
 
 	return 0;
 }
 
-int reciveFile(int sockfd, char* name)
+int reciveFile(int sockfd)
 {
+	char* name = (char*)calloc(sizeof(char), PATH_MAX);
+	if(recv(sockfd, name, sizeof(char)*PATH_MAX, 0) < 0){
+		perror("Error: recive name");
+		return 1;
+	}
 	char* vname = getName(name);
 	FILE* fd = fopen(vname, "w");
 	if(!fd){
@@ -45,6 +50,7 @@ int reciveFile(int sockfd, char* name)
 	fclose(fd);
 	free(vname);
 	free(buff);
+	free(name);
 	return 1;
 }
 
