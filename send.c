@@ -3,10 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <linux/limits.h>
 
 #define SIZE 512
 
 int sendFile(int sockfd, char* name);
+int sendName(int sockfd, char* name);
 
 int main(int argc, char* argv[])
 {
@@ -35,6 +37,11 @@ int sendFile(int sockfd, char* name)
 	}
 	
 	int read = 0;
+	//send filename then file
+	if(sendName(sockfd, name) < 0){
+		perror("Error: sendName");
+		return -1;
+	}
 	while((read = fread(buff, sizeof(char), SIZE, fd)) > 0){
 		if(send(sockfd, buff, read, 0) != read){
 			perror("Error: send");
@@ -52,4 +59,13 @@ int sendFile(int sockfd, char* name)
 	}
 	fclose(fd);
 	return 1;
+}
+
+int sendName(int sockfd, char* name)
+{
+	char* sname = (char*)calloc(sizeof(char), PATH_MAX);
+	strcpy(sname, name);
+	int res = send(sockfd, sname, PATH_MAX*sizeof(char), 0);
+	free(sname);
+	return res;
 }
