@@ -19,7 +19,6 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 	int sockfd = startServer(atoi(argv[1]));
-	sleep(2);
 	reciveFile(sockfd);
 
 	return 0;
