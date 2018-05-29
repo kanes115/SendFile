@@ -1,16 +1,20 @@
 #include <stdio.h>
 #include <string.h>
 #include "connect.h"
+#include "md5calc.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <linux/limits.h>
+#include <openssl/md5.h>
 
 #define SIZE 512
 
 int reciveFile(int sockfd);
 char* getName(char* name);
 int getNameExtPos(char* name);
+int checkMD5(unsigned char* md1, FILE* fp);
+unsigned char* reciveMD5(int sockfd);
 
 int main(int argc, char* argv[])
 {
@@ -27,17 +31,22 @@ int main(int argc, char* argv[])
 int reciveFile(int sockfd)
 {
 	char* name = (char*)calloc(sizeof(char), PATH_MAX);
-	if(recv(sockfd, name, sizeof(char)*PATH_MAX, 0) < 0){
+	if(recv(sockfd, name, sizeof(char)*PATH_MAX, MSG_WAITALL) < 0){
 		perror("Error: recive name");
 		return 1;
 	}
 	char* vname = getName(name);
-	FILE* fd = fopen(vname, "w");
+	FILE* fd = fopen(vname, "a+");
 	if(!fd){
 		perror("Error: fopen");
 		return 2;
 	}
 
+	unsigned char* md = reciveMD5(sockfd);
+	if(!md){
+		perror("Error: reciveMD5");
+		exit(4);
+	}
 	char* buff = (char*)calloc(sizeof(char), SIZE);
 	if(!buff){
 		perror("Error: Failed to allocate memory");
@@ -47,10 +56,18 @@ int reciveFile(int sockfd)
 	while((read = recv(sockfd, buff, SIZE, 0)) > 0){
 		fwrite(buff, sizeof(char), read, fd);
 	}
+	int res = checkMD5(md, fd);
+	if(!res){
+		printf("Warning: MD5 not matched\n");
+	}
+	else{
+		printf("MD5 Checked\n");
+	}
 	fclose(fd);
 	free(vname);
 	free(buff);
 	free(name);
+	free(md);
 	return 1;
 }
 
@@ -90,4 +107,22 @@ int getNameExtPos(char* name)
 		return i-1;
 	return pos;
 }
+unsigned char* reciveMD5(int sockfd){
+	unsigned char* md1 = (unsigned char*)calloc(sizeof(unsigned char), MD5_DIGEST_LENGTH);
+	if(recv(sockfd, md1, sizeof(unsigned char)*MD5_DIGEST_LENGTH, MSG_WAITALL) < 0){
+		perror("Error: recive name");
+		free(md1);
+		return NULL;
+	}
+	return md1;
+}
 
+int checkMD5(unsigned char* md1, FILE* fp)
+{
+	unsigned char* md2 = getMD5(fp);
+	int res = compareMD5(md1, md2);
+	free(md2);
+	free(md1);
+	return res;
+
+}
