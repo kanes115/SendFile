@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 int reciveFile(int sockfd)
 {
 	char* name = (char*)calloc(sizeof(char), PATH_MAX);
-	if(recv(sockfd, name, sizeof(char)*PATH_MAX, 0) < 0){
+	if(recv(sockfd, name, sizeof(char)*PATH_MAX, MSG_WAITALL) < 0){
 		perror("Error: recive name");
 		return 1;
 	}
